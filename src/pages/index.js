@@ -1,176 +1,281 @@
-import * as React from "react"
+import * as React from "react";
 
-const pageStyles = {
-  color: "#232129",
-  padding: 96,
-  fontFamily: "-apple-system, Roboto, sans-serif, serif",
-}
-const headingStyles = {
-  marginTop: 0,
-  marginBottom: 64,
-  maxWidth: 320,
-}
-const headingAccentStyles = {
-  color: "#663399",
-}
-const paragraphStyles = {
-  marginBottom: 48,
-}
-const codeStyles = {
-  color: "#8A6534",
-  padding: 4,
-  backgroundColor: "#FFF4DB",
-  fontSize: "1.25rem",
-  borderRadius: 4,
-}
-const listStyles = {
-  marginBottom: 96,
-  paddingLeft: 0,
-}
-const listItemStyles = {
-  fontWeight: 300,
-  fontSize: 24,
-  maxWidth: 560,
-  marginBottom: 30,
-}
+const SUITS = { 0: "Diamond", 1: "Clover", 2: "Heart", 3: "Spade" };
+const FACES = {
+  0: 2,
+  1: 3,
+  2: 4,
+  3: 5,
+  4: 6,
+  5: 7,
+  6: 8,
+  7: 9,
+  8: 10,
+  9: "Jack",
+  10: "Queen",
+  11: "King",
+  12: "Ace",
+};
+export default function Home() {
+  const [bank, setBank] = React.useState(2000);
+  const [bet, setBet] = React.useState(0);
+  const [state, setState] = React.useState("bet");
+  const [userHand, setUserHand] = React.useState([]);
+  const [userTotal, setUserTotal] = React.useState(0);
+  const [dealerHand, setDealerHand] = React.useState([]);
+  const [dealerTotal, setDealerTotal] = React.useState(0);
+  const [deck, setDeck] = React.useState([]);
 
-const linkStyle = {
-  color: "#8954A8",
-  fontWeight: "bold",
-  fontSize: 16,
-  verticalAlign: "5%",
-}
+  React.useEffect(() => {
+    const localDeck = JSON.parse(window.localStorage.getItem("deck"));
+    if (localDeck) {
+      setDeck(localDeck);
+    } else {
+      shuffle();
+    }
+    const localBank = window.localStorage.getItem("bank");
+    if (localBank) {
+      setBank(localBank);
+    }
+  }, []);
 
-const docLinkStyle = {
-  ...linkStyle,
-  listStyleType: "none",
-  marginBottom: 24,
-}
+  React.useEffect(() => {
+    const total = calculateHand(userHand);
+    setUserTotal(total);
+  }, [userHand]);
 
-const descriptionStyle = {
-  color: "#232129",
-  fontSize: 14,
-  marginTop: 10,
-  marginBottom: 0,
-  lineHeight: 1.25,
-}
+  React.useEffect(() => {
+    if (userTotal > 21) {
+      setState("bust");
+    }
 
-const docLink = {
-  text: "Documentation",
-  url: "https://www.gatsbyjs.com/docs/",
-  color: "#8954A8",
-}
+    if (userTotal === 21) {
+      if (userHand.length == 2) {
+        console.log("blackjack");
+        setState("blackjack");
+        return;
+      }
+      setState("dealer");
+    }
+  }, [userTotal]);
 
-const badgeStyle = {
-  color: "#fff",
-  backgroundColor: "#088413",
-  border: "1px solid #088413",
-  fontSize: 11,
-  fontWeight: "bold",
-  letterSpacing: 1,
-  borderRadius: 4,
-  padding: "4px 6px",
-  display: "inline-block",
-  position: "relative",
-  top: -2,
-  marginLeft: 10,
-  lineHeight: 1,
-}
+  React.useEffect(() => {
+    const hand =
+      state === "dealer"
+        ? dealerHand
+        : dealerHand.filter((card) => card != dealerHand[0]);
+    const total = calculateHand(hand);
+    setDealerTotal(total);
+  }, [dealerHand]);
 
-const links = [
-  {
-    text: "Tutorial",
-    url: "https://www.gatsbyjs.com/docs/tutorial/getting-started/",
-    description:
-      "A great place to get started if you're new to web development. Designed to guide you through setting up your first Gatsby site.",
-    color: "#E95800",
-  },
-  {
-    text: "How to Guides",
-    url: "https://www.gatsbyjs.com/docs/how-to/",
-    description:
-      "Practical step-by-step guides to help you achieve a specific goal. Most useful when you're trying to get something done.",
-    color: "#1099A8",
-  },
-  {
-    text: "Reference Guides",
-    url: "https://www.gatsbyjs.com/docs/reference/",
-    description:
-      "Nitty-gritty technical descriptions of how Gatsby works. Most useful when you need detailed information about Gatsby's APIs.",
-    color: "#BC027F",
-  },
-  {
-    text: "Conceptual Guides",
-    url: "https://www.gatsbyjs.com/docs/conceptual/",
-    description:
-      "Big-picture explanations of higher-level Gatsby concepts. Most useful for building understanding of a particular topic.",
-    color: "#0D96F2",
-  },
-  {
-    text: "Plugin Library",
-    url: "https://www.gatsbyjs.com/plugins",
-    description:
-      "Add functionality and customize your Gatsby site or app with thousands of plugins built by our amazing developer community.",
-    color: "#8EB814",
-  },
-  {
-    text: "Build and Host",
-    url: "https://www.gatsbyjs.com/cloud",
-    badge: true,
-    description:
-      "Now you’re ready to show the world! Give your Gatsby site superpowers: Build and host on Gatsby Cloud. Get started for free!",
-    color: "#663399",
-  },
-]
+  React.useEffect(() => {
+    switch (state) {
+      case "dealer":
+        if (dealerTotal < 17) {
+          setTimeout(() => {
+            hit();
+          }, 1000);
+          return;
+        } else {
+          switch (true) {
+            case dealerTotal > 21:
+            case dealerTotal < userTotal:
+              console.log("user wins");
+              setBank(bank + bet);
+              break;
 
-const IndexPage = () => {
+            case dealerTotal > userTotal:
+            case dealerTotal === 21 && dealerHand.length === 2:
+              console.log("dealer wins");
+              setBank(bank - bet);
+              break;
+
+            default:
+              console.log("push");
+              break;
+          }
+        }
+        break;
+      case "blackjack":
+        if (dealerTotal === 21) {
+          console.log("push");
+        } else {
+          console.log("user wins");
+          setBank(bank + Math.round(bet * 1.5));
+        }
+        break;
+      case "bust":
+        if (state === "bust") {
+          console.log("dealer wins");
+          setBank(bank - bet);
+        }
+        break;
+      default:
+        return;
+    }
+    const prevBet = bet;
+    setBet(0);
+    setTimeout(() => {
+      setState("bet");
+      setBet(prevBet);
+    }, 2000);
+  }, [dealerTotal]);
+
+  /**
+   * Reacts to each state change
+   * 1. Bet: user places bet
+   * 2. Deal: deal user and dealer cards. ?? maybe include insurance and splitting here?
+   * 3. Insurance: checks if dealer has natural blackjack. if not user loses insurance and goes back to deal incase splitting is possible
+   * 4. Split: ??
+   * 4. User: user turn
+   * 5. Dealer: dealer turn
+   * 5.
+   */
+  React.useEffect(() => {
+    console.log("current state: ", state);
+    switch (state) {
+      case "bet":
+        setDealerHand([]);
+        setUserHand([]);
+        if (deck.length != 0 && deck.length < 52) {
+          shuffle();
+        }
+        break;
+      case "deal":
+      case "user":
+      case "insurance":
+        break;
+      default:
+        const total = calculateHand(dealerHand);
+        setDealerTotal(total);
+        break;
+    }
+  }, [state]);
+
+  React.useEffect(() => {
+    window.localStorage.setItem("deck", JSON.stringify(deck));
+  }, [deck]);
+
+  React.useEffect(() => {
+    window.localStorage.setItem("bank", bank);
+  }, [bank]);
+
+  const shuffle = () => {
+    const unshuffled = Object.keys(FACES).flatMap((f) =>
+      Object.keys(SUITS).map((s) => {
+        return { suit: s, face: f };
+      })
+    );
+    unshuffled.push(...unshuffled);
+    //change local storage
+    setDeck(
+      unshuffled
+        .map((value) => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value)
+    );
+  };
+
+  const calculateHand = (hand) => {
+    let ace = false;
+    let total = 0;
+    hand.forEach((card) => {
+      if (Number(card.face) < 9) {
+        total += FACES[card.face];
+      } else if (Number(card.face) === 12) {
+        if (ace) {
+          total += 1;
+        } else {
+          ace = true;
+        }
+      } else {
+        total += 10;
+      }
+    });
+    if (ace) {
+      total += total > 10 ? 1 : 11;
+    }
+    return total;
+  };
+
+  const deal = () => {
+    setUserHand([deck[0], deck[2]]);
+    setDealerHand([deck[1], deck[3]]);
+    //change local storage
+    setDeck((deck) => deck.filter((c, i) => i > 3));
+    setState("deal");
+  };
+
+  const stand = () => {
+    setState("dealer");
+  };
+
+  const insurance = () => {
+    setState("insurance");
+  };
+
+  const hit = () => {
+    const card = deck[0];
+    // change local storage
+    setDeck((deck) => deck.filter((c, i) => i != 0));
+
+    switch (state) {
+      case "user":
+        setUserHand([...userHand, card]);
+        break;
+      case "deal":
+        setUserHand([...userHand, card]);
+        setState("user");
+        break;
+      default:
+        setDealerHand([...dealerHand, card]);
+        break;
+    }
+  };
   return (
-    <main style={pageStyles}>
-      <h1 style={headingStyles}>
-        Congratulations
-        <br />
-        <span style={headingAccentStyles}>— you just made a Gatsby site! 🎉🎉🎉</span>
-      </h1>
-      <p style={paragraphStyles}>
-        Edit <code style={codeStyles}>src/pages/index.js</code> to see this page
-        update in real-time. 😎
-      </p>
-      <ul style={listStyles}>
-        <li style={docLinkStyle}>
-          <a
-            style={linkStyle}
-            href={`${docLink.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-          >
-            {docLink.text}
-          </a>
-        </li>
-        {links.map(link => (
-          <li key={link.url} style={{ ...listItemStyles, color: link.color }}>
-            <span>
-              <a
-                style={linkStyle}
-                href={`${link.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-              >
-                {link.text}
-              </a>
-              {link.badge && (
-                <span style={badgeStyle} aria-label="New Badge">
-                  NEW!
-                </span>
-              )}
-              <p style={descriptionStyle}>{link.description}</p>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <img
-        alt="Gatsby G Logo"
-        src="data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2a10 10 0 110 20 10 10 0 010-20zm0 2c-3.73 0-6.86 2.55-7.75 6L14 19.75c3.45-.89 6-4.02 6-7.75h-5.25v1.5h3.45a6.37 6.37 0 01-3.89 4.44L6.06 9.69C7 7.31 9.3 5.63 12 5.63c2.13 0 4 1.04 5.18 2.65l1.23-1.06A7.959 7.959 0 0012 4zm-8 8a8 8 0 008 8c.04 0 .09 0-8-8z' fill='%23639'/%3E%3C/svg%3E"
-      />
-    </main>
-  )
+    <div>
+      {/* user hand */}
+      {deck.length}
+      <div>
+        User[{userTotal}]:{" "}
+        {userHand.map((card) => `{${FACES[card.face]} ${SUITS[card.suit]}}`)}
+      </div>
+      {/* dealer hand */}
+      <div>
+        Dealer[{dealerTotal}]:{" "}
+        {dealerHand.map((card, i) =>
+          i == 0 && ["deal", "user", "split"].includes(state)
+            ? "{x}"
+            : `{${FACES[card.face]} ${SUITS[card.suit]}}`
+        )}
+      </div>
+
+      <div>
+        {state === "bet" && bet != 0 && <button onClick={deal}>Deal</button>}
+        {["deal", "user", "split"].includes(state) && (
+          <button onClick={hit}>Hit</button>
+        )}
+        {["deal", "user", "split"].includes(state) && (
+          <button onClick={stand}>Stand</button>
+        )}
+        {/* {state === "deal" &&
+          dealerHand[1].face === "12" &&
+          userHand.length === 2 && (
+            <button onClick={insurance}>Insurance</button>
+          )} */}
+      </div>
+      <hr />
+      <div>bank: {bank - bet}</div>
+      <div>bet: {bet}</div>
+      {bank - bet >= 1 && <button onClick={() => setBet(bet + 1)}>1</button>}
+      {bank - bet >= 10 && <button onClick={() => setBet(bet + 10)}>10</button>}
+      {bank - bet >= 50 && <button onClick={() => setBet(bet + 50)}>50</button>}
+      {bank - bet >= 100 && (
+        <button onClick={() => setBet(bet + 100)}>100</button>
+      )}
+      {bank - bet >= 500 && (
+        <button onClick={() => setBet(bet + 500)}>500</button>
+      )}
+    </div>
+  );
 }
-
-export default IndexPage
-
-export const Head = () => <title>Home Page</title>
