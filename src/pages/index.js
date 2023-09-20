@@ -1,4 +1,7 @@
 import * as React from "react";
+import styled from "styled-components";
+import "../styles/global.css";
+import { StaticImage } from "gatsby-plugin-image";
 
 const SUITS = { 0: "Diamond", 1: "Clover", 2: "Heart", 3: "Spade" };
 const FACES = {
@@ -217,7 +220,7 @@ export default function Home() {
   const hit = () => {
     const card = deck[0];
     // change local storage
-    setDeck((deck) => deck.filter((c, i) => i != 0));
+    setDeck((deck) => deck.filter((c, i) => i !== 0));
 
     switch (state) {
       case "user":
@@ -232,50 +235,113 @@ export default function Home() {
         break;
     }
   };
-  return (
-    <div>
-      {/* user hand */}
-      {deck.length}
-      <div>
-        User[{userTotal}]:{" "}
-        {userHand.map((card) => `{${FACES[card.face]} ${SUITS[card.suit]}}`)}
-      </div>
-      {/* dealer hand */}
-      <div>
-        Dealer[{dealerTotal}]:{" "}
-        {dealerHand.map((card, i) =>
-          i == 0 && ["deal", "user", "split"].includes(state)
-            ? "{x}"
-            : `{${FACES[card.face]} ${SUITS[card.suit]}}`
-        )}
-      </div>
 
-      <div>
-        {state === "bet" && bet != 0 && <button onClick={deal}>Deal</button>}
-        {["deal", "user", "split"].includes(state) && (
-          <button onClick={hit}>Hit</button>
-        )}
-        {["deal", "user", "split"].includes(state) && (
-          <button onClick={stand}>Stand</button>
-        )}
-        {/* {state === "deal" &&
-          dealerHand[1].face === "12" &&
-          userHand.length === 2 && (
-            <button onClick={insurance}>Insurance</button>
-          )} */}
-      </div>
-      <hr />
-      <div>bank: {bank - bet}</div>
-      <div>bet: {bet}</div>
-      {bank - bet >= 1 && <button onClick={() => setBet(bet + 1)}>1</button>}
-      {bank - bet >= 10 && <button onClick={() => setBet(bet + 10)}>10</button>}
-      {bank - bet >= 50 && <button onClick={() => setBet(bet + 50)}>50</button>}
-      {bank - bet >= 100 && (
-        <button onClick={() => setBet(bet + 100)}>100</button>
-      )}
-      {bank - bet >= 500 && (
-        <button onClick={() => setBet(bet + 500)}>500</button>
-      )}
-    </div>
+  const Main = styled.div`
+    height: 100vh;
+    background: #004225;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+  `;
+
+  const Bank = styled.div`
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: -11rem;
+    background: #263a29;
+    padding: 1.25rem;
+    width: 30rem;
+    height: 12rem;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.25);
+    @media screen and (min-width: 1024px) {
+      width: 50rem;
+    }
+
+    @media screen and (max-width: 768px) {
+      width: 100%;
+      padding-left: 4rem;
+    }
+
+    transition: transform 0.5s ease-in-out;
+    &:hover {
+      transform: translateY(-10rem);
+    }
+
+    .chips {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  `;
+
+  const Bold = styled.p`
+    display: inline;
+    font-weight: 800;
+  `;
+
+  const Chip = styled.img`
+    width: 8rem;
+    height: 8rem;
+  `;
+
+  return (
+    // <div>
+    //   {deck.length}
+    //   <div>
+    //     User[{userTotal}]:{" "}
+    //     {userHand.map((card) => `{${FACES[card.face]} ${SUITS[card.suit]}}`)}
+    //   </div>
+    //   <div>
+    //     Dealer[{dealerTotal}]:{" "}
+    //     {dealerHand.map((card, i) =>
+    //       i == 0 && ["deal", "user", "split"].includes(state)
+    //         ? "{x}"
+    //         : `{${FACES[card.face]} ${SUITS[card.suit]}}`
+    //     )}
+    //   </div>
+
+    //   <div>
+    //     {state === "bet" && bet != 0 && <button onClick={deal}>Deal</button>}
+    //     {["deal", "user", "split"].includes(state) && (
+    //       <button onClick={hit}>Hit</button>
+    //     )}
+    //     {["deal", "user", "split"].includes(state) && (
+    //       <button onClick={stand}>Stand</button>
+    //     )}
+    //     {state === "deal" &&
+    //       dealerHand[1].face === "12" &&
+    //       userHand.length === 2 && (
+    //         <button onClick={insurance}>Insurance</button>
+    //       )}
+    //   </div>
+    //   <hr />
+    //   <div>bank: {bank - bet}</div>
+    //   <div>bet: {bet}</div>
+    //   {bank - bet >= 1 && <button onClick={() => setBet(bet + 1)}>1</button>}
+    //   {bank - bet >= 10 && <button onClick={() => setBet(bet + 10)}>10</button>}
+    //   {bank - bet >= 50 && <button onClick={() => setBet(bet + 50)}>50</button>}
+    //   {bank - bet >= 100 && (
+    //     <button onClick={() => setBet(bet + 100)}>100</button>
+    //   )}
+    //   {bank - bet >= 500 && (
+    //     <button onClick={() => setBet(bet + 500)}>500</button>
+    //   )}
+    // </div>
+    <Main>
+      <Bank>
+        <div>
+          Balance:
+          <Bold> ${bank}</Bold>
+        </div>
+
+        <div className="chips">
+          <Chip src="./chip1.png" alt="chip1" />
+        </div>
+      </Bank>
+    </Main>
   );
 }
