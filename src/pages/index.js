@@ -2,6 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import "../styles/global.css";
 import { StaticImage } from "gatsby-plugin-image";
+import Bank from "../components/bank";
 
 const SUITS = { 0: "Diamond", 1: "Clover", 2: "Heart", 3: "Spade" };
 const FACES = {
@@ -245,49 +246,6 @@ export default function Home() {
     color: white;
   `;
 
-  const Bank = styled.div`
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    bottom: -11rem;
-    background: #263a29;
-    padding: 1.25rem;
-    width: 30rem;
-    height: 12rem;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.25);
-    @media screen and (min-width: 1024px) {
-      width: 50rem;
-    }
-
-    @media screen and (max-width: 768px) {
-      width: 100%;
-      padding-left: 4rem;
-    }
-
-    transition: transform 0.5s ease-in-out;
-    &:hover {
-      transform: translateY(-10rem);
-    }
-
-    .chips {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  `;
-
-  const Bold = styled.p`
-    display: inline;
-    font-weight: 800;
-  `;
-
-  const Chip = styled.img`
-    width: 8rem;
-    height: 8rem;
-  `;
-
   return (
     // <div>
     //   {deck.length}
@@ -332,16 +290,7 @@ export default function Home() {
     //   )}
     // </div>
     <Main>
-      <Bank>
-        <div>
-          Balance:
-          <Bold> ${bank}</Bold>
-        </div>
-
-        <div className="chips">
-          <Chip src="./chip1.png" alt="chip1" />
-        </div>
-      </Bank>
+      <Bank bank={bank} bet={bet} setBet={setBet} />
     </Main>
   );
 }
