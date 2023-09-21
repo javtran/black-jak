@@ -5,23 +5,38 @@ export default function Bank({ bank }) {
   const [active, setActive] = useState(false);
 
   const Bank = styled.div`
-    display: flex;
-    flex-direction: column;
+    user-select: none;
     position: fixed;
     box-sizing: border-box;
-    bottom: -11rem;
+    bottom: 0;
     background: #263a29;
-    padding: 1.25rem;
     width: 90%;
-    height: 14rem;
     border-radius: 20px 20px 0 0;
     box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.25);
-    transition: all 0.5s ease-in-out;
-    &:hover {
-      transform: translateY(-11rem);
+
+    input {
+      position: absolute;
+      height: 2rem;
+      width: 100%;
+      opacity: 0;
+      top: 0;
+      left: 0;
+      cursor: pointer;
     }
-    /* transform: ${(props) =>
-      props.active ? "translateY(-11rem)" : "none"}; */
+
+    input:checked ~ div > .chips {
+      max-height: 8rem;
+      margin-bottom: 1.25rem;
+    }
+
+    & > div {
+      padding: 1.25rem;
+      padding-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
     img {
       height: 8rem;
     }
@@ -31,7 +46,7 @@ export default function Bank({ bank }) {
     }
 
     .chips {
-      flex: 1;
+      max-height: 0;
       width: 80%;
       margin-left: auto;
       margin-right: auto;
@@ -40,6 +55,7 @@ export default function Bank({ bank }) {
       align-items: center;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(10px, max-content));
+      transition: all 0.2s ease-in;
     }
 
     @media screen and (min-width: 1024px) {
@@ -53,15 +69,8 @@ export default function Bank({ bank }) {
     @media screen and (max-width: 768px) {
       width: 100%;
       border-radius: 0;
-      left: 0;
-      bottom: -9rem;
-      height: 12rem;
-      &:hover {
-        transform: translateY(-9rem);
-      }
-
       .chips {
-        width: 95%;
+        width: 100%;
       }
 
       img {
@@ -78,18 +87,21 @@ export default function Bank({ bank }) {
         setActive(true);
       }}
     >
-      <div>
-        Balance:
-        <p> ${bank}</p>
-      </div>
+      <input type="checkbox" />
+      <div className="wrapper">
+        <div>
+          Balance:
+          <p> ${bank}</p>
+        </div>
 
-      <div className="chips">
-        <img src="./chip1.png" alt="chip1" />
-        <img src="./chip10.png" alt="chip10" />
-        <img src="./chip50.png" alt="chip50" />
-        <img src="./chip100.png" alt="chip100" />
-        <img src="./chip500.png" alt="chip500" />
-        <img src="./chip1000.png" alt="chip1000" />
+        <div className="chips">
+          <img src="./chip1.png" alt="chip1" />
+          <img src="./chip10.png" alt="chip10" />
+          <img src="./chip50.png" alt="chip50" />
+          <img src="./chip100.png" alt="chip100" />
+          <img src="./chip500.png" alt="chip500" />
+          <img src="./chip1000.png" alt="chip1000" />
+        </div>
       </div>
     </Bank>
   );
