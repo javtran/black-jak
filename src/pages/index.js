@@ -1,9 +1,7 @@
 import * as React from "react";
-import styled from "styled-components";
 import "../styles/global.css";
-import { StaticImage } from "gatsby-plugin-image";
 import { useCollapse } from "react-collapsed";
-import { Bank, Main } from "./styles";
+import { Bank, Bet, Main } from "./styles";
 
 const SUITS = { 0: "Diamond", 1: "Clover", 2: "Heart", 3: "Spade" };
 const FACES = {
@@ -24,6 +22,7 @@ const FACES = {
 export default function Home() {
   const [bank, setBank] = React.useState(2000);
   const [bet, setBet] = React.useState(0);
+  const [betList, setBetList] = React.useState([]);
   const [state, setState] = React.useState("bet");
   const [userHand, setUserHand] = React.useState([]);
   const [userTotal, setUserTotal] = React.useState(0);
@@ -44,7 +43,6 @@ export default function Home() {
       setBank(localBank);
     }
   }, []);
-
   React.useEffect(() => {
     const total = calculateHand(userHand);
     setUserTotal(total);
@@ -239,6 +237,16 @@ export default function Home() {
     }
   };
 
+  const onBet = (amount) => {
+    setBet(bet + amount);
+    setBetList([...betList, amount]);
+  };
+
+  const removeBet = () => {
+    setBet(bet - betList[betList.length - 1]);
+    setBetList(betList.slice(0, -1));
+  };
+
   return (
     // <div>
     //   {deck.length}
@@ -283,6 +291,17 @@ export default function Home() {
     //   )}
     // </div>
     <Main>
+      {bet > 0 && (
+        <Bet>
+          <div onClick={() => removeBet()}>
+            {betList.slice(-3).map((amount) => (
+              <img src={`./chip${amount}.png`} alt={`chip${amount}`} />
+            ))}
+          </div>
+          <p>${bet}</p>
+        </Bet>
+      )}
+
       <Bank>
         <div className="toggle" {...getToggleProps()} />
         <div className="wrapper">
@@ -293,45 +312,41 @@ export default function Home() {
           <div {...getCollapseProps()}>
             <div className="chips">
               {bank - bet >= 1 && (
-                <img
-                  src="./chip1.png"
-                  alt="chip1"
-                  onClick={() => setBet(bet + 1)}
-                />
+                <img src="./chip1.png" alt="chip1" onClick={() => onBet(1)} />
               )}
               {bank - bet >= 10 && (
                 <img
                   src="./chip10.png"
                   alt="chip10"
-                  onClick={() => setBet(bet + 10)}
+                  onClick={() => onBet(10)}
                 />
               )}
               {bank - bet >= 50 && (
                 <img
                   src="./chip50.png"
                   alt="chip50"
-                  onClick={() => setBet(bet + 50)}
+                  onClick={() => onBet(50)}
                 />
               )}
               {bank - bet >= 100 && (
                 <img
                   src="./chip100.png"
                   alt="chip100"
-                  onClick={() => setBet(bet + 100)}
+                  onClick={() => onBet(100)}
                 />
               )}
               {bank - bet >= 500 && (
                 <img
                   src="./chip500.png"
                   alt="chip500"
-                  onClick={() => setBet(bet + 500)}
+                  onClick={() => onBet(500)}
                 />
               )}
               {bank - bet >= 1000 && (
                 <img
                   src="./chip1000.png"
                   alt="chip1000"
-                  onClick={() => setBet(bet + 1000)}
+                  onClick={() => onBet(1000)}
                 />
               )}
             </div>

@@ -39,6 +39,8 @@ export const Bank = styled.div`
   img {
     height: 8rem;
     width: 8rem;
+    border-radius: 50%;
+    box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
   }
 
   .balance {
@@ -51,7 +53,6 @@ export const Bank = styled.div`
   }
 
   .chips {
-    height: 8rem;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -66,22 +67,62 @@ export const Bank = styled.div`
 
   @media screen and (min-width: 1024px) {
     width: 50rem;
-
-    img {
-      height: 8rem;
-    }
   }
 
   @media screen and (max-width: 768px) {
     width: 100%;
     border-radius: 0;
+
+    img {
+      max-width: 120%;
+      height: auto;
+    }
+  }
+`;
+
+export const Bet = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+
+  div {
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 5%);
+  }
+
+  img {
+    height: 8rem;
+    width: 8rem;
+    border-radius: 50%;
+    box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
+  }
+
+  p {
+    font-weight: 900;
+    font-size: 1.5rem;
+  }
+  @media screen and (max-width: 768px) {
+    div {
+    width: 100%;
+    width: 100%;
+    border-radius: 0;
+    .chips {
+      width: 100%;
+      height: auto;
+      width: 100%;
+    border-radius: 0;
     .chips {
       width: 100%;
       height: auto;
     }
-
     img {
-      max-width: 120%;
+      width: 500%;
       height: auto;
     }
   }
