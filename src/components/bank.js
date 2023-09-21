@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-export default function Bank({ bank }) {
-  const [active, setActive] = useState(false);
-
+export default function Bank({ bank, bet, setBet }) {
   const Bank = styled.div`
     user-select: none;
     position: fixed;
     box-sizing: border-box;
     bottom: 0;
     background: #263a29;
-    width: 90%;
+    width: 80%;
     border-radius: 20px 20px 0 0;
     box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.25);
 
@@ -39,6 +37,7 @@ export default function Bank({ bank }) {
 
     img {
       height: 8rem;
+      width: 8rem;
     }
     p {
       display: inline;
@@ -47,14 +46,15 @@ export default function Bank({ bank }) {
 
     .chips {
       max-height: 0;
-      width: 80%;
+      /* width: 80%; */
+      width: 100%;
       margin-left: auto;
       margin-right: auto;
       justify-content: center;
       justify-items: center;
       align-items: center;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(10px, max-content));
+      grid-template-columns: repeat(auto-fit, 14%);
       transition: all 0.2s ease-in;
     }
 
@@ -81,26 +81,61 @@ export default function Bank({ bank }) {
   `;
 
   return (
-    <Bank
-      active={active}
-      onClick={() => {
-        setActive(true);
-      }}
-    >
-      <input type="checkbox" />
+    <Bank>
+      <input
+        // checked={openBank}
+        type="checkbox"
+        // onChange={() => setOpenBank(!openBank)}
+      />
       <div className="wrapper">
-        <div>
+        <div className="balance">
           Balance:
-          <p> ${bank}</p>
+          <p> ${bank - bet}</p>
         </div>
 
         <div className="chips">
-          <img src="./chip1.png" alt="chip1" />
-          <img src="./chip10.png" alt="chip10" />
-          <img src="./chip50.png" alt="chip50" />
-          <img src="./chip100.png" alt="chip100" />
-          <img src="./chip500.png" alt="chip500" />
-          <img src="./chip1000.png" alt="chip1000" />
+          {bank - bet >= 1 && (
+            <img
+              src="./chip1.png"
+              alt="chip1"
+              onClick={() => setBet(bet + 1)}
+            />
+          )}
+          {bank - bet >= 10 && (
+            <img
+              src="./chip10.png"
+              alt="chip10"
+              onClick={() => setBet(bet + 10)}
+            />
+          )}
+          {bank - bet >= 50 && (
+            <img
+              src="./chip50.png"
+              alt="chip50"
+              onClick={() => setBet(bet + 50)}
+            />
+          )}
+          {bank - bet >= 100 && (
+            <img
+              src="./chip100.png"
+              alt="chip100"
+              onClick={() => setBet(bet + 100)}
+            />
+          )}
+          {bank - bet >= 500 && (
+            <img
+              src="./chip500.png"
+              alt="chip500"
+              onClick={() => setBet(bet + 500)}
+            />
+          )}
+          {bank - bet >= 1000 && (
+            <img
+              src="./chip1000.png"
+              alt="chip1000"
+              onClick={() => setBet(bet + 1000)}
+            />
+          )}
         </div>
       </div>
     </Bank>
