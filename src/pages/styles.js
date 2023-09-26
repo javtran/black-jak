@@ -3,13 +3,35 @@ import styled from "styled-components";
 export const Main = styled.div`
   height: 100vh;
   background: #004225;
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   color: white;
+  .main {
+    height: calc(100% - 4rem);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    /* padding-bottom: 100px; */
+    /* margin-bottom: 100px; */
+  }
+
+  .playfield {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-weight: bold;
+    flex: 1;
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, 20%);
+    }
+  }
 `;
 
-export const Bank = styled.div`
+export const StyledBank = styled.div`
   user-select: none;
   position: fixed;
   box-sizing: border-box;
@@ -41,6 +63,7 @@ export const Bank = styled.div`
     width: 8rem;
     border-radius: 50%;
     box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
   }
 
   .balance {
@@ -81,12 +104,19 @@ export const Bank = styled.div`
 `;
 
 export const Bet = styled.div`
+  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   user-select: none;
+  gap: 1rem;
 
-  div {
+  #bets {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #bets > div {
     margin-left: auto;
     margin-right: auto;
     justify-content: center;
@@ -101,29 +131,101 @@ export const Bet = styled.div`
     width: 8rem;
     border-radius: 50%;
     box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
   }
 
   p {
     font-weight: 900;
     font-size: 1.5rem;
+    margin: 0;
+    margin-top: 1rem;
+  }
+
+  .buttons {
+    flex: 1;
+    /* border: 1px solid black; */
+    display: flex;
+    justify-content: center;
+  }
+
+  button {
+    background: #862b0d;
+    width: 8rem;
+    height: 4rem;
+    color: inherit;
+    font-size: x-large;
+    font-weight: bold;
+    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.25);
+    border: none;
+    border-radius: 0.5rem;
+  }
+
+  @media screen and (max-width: 768px) {
+    #bets {
+      flex-shrink: 2;
+      flex-basis: auto;
+      flex-grow: 0;
+      img {
+        /* width: 4rem; */
+        width: auto;
+        height: 17vw;
+      }
+    }
+
+    button {
+      width: 17vw;
+      height: 8vw;
+      font-size: 3vw;
+    }
+  }
+`;
+
+export const StyledCard = styled.div`
+  position: relative;
+  background: white;
+  padding: 0.4rem;
+  border-radius: 10px;
+  color: ${(props) => props.color};
+  width: 7rem;
+  height: 10rem;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  box-shadow: 0px 4px 8px 0px #000;
+  align-items: center;
+  justify-items: center;
+  user-select: none;
+  p {
+    margin: 0;
+    font-size: small;
+    text-align: center;
+  }
+  img {
+    width: 100%;
+  }
+  #top {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 3;
+  }
+  #bottom {
+    grid-column-start: 10;
+    grid-column-end: 11;
+    grid-row-start: 9;
+    grid-row-end: 11;
+    transform: scale(-1, -1);
+  }
+
+  #center {
+    grid-column-start: 4;
+    grid-column-end: 8;
+    grid-row-start: 4;
+    grid-row-end: 8;
+    border: 1px;
   }
   @media screen and (max-width: 768px) {
-    div {
-    width: 100%;
-    width: 100%;
-    border-radius: 0;
-    .chips {
-      width: 100%;
-      height: auto;
-      width: 100%;
-    border-radius: 0;
-    .chips {
-      width: 100%;
-      height: auto;
-    }
-    img {
-      width: 500%;
-      height: auto;
-    }
+    width: 14vw;
+    height: 22vw;
   }
 `;

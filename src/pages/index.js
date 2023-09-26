@@ -1,9 +1,10 @@
 import * as React from "react";
 import "../styles/global.css";
 import { useCollapse } from "react-collapsed";
-import { Bank, Bet, Main } from "./styles";
+import { Bet, Main, StyledBank } from "./styles";
+import Card from "../components/card";
 
-const SUITS = { 0: "Diamond", 1: "Clover", 2: "Heart", 3: "Spade" };
+const SUITS = { 0: "diamond", 1: "clover", 2: "heart", 3: "spade" };
 const FACES = {
   0: 2,
   1: 3,
@@ -14,10 +15,10 @@ const FACES = {
   6: 8,
   7: 9,
   8: 10,
-  9: "Jack",
-  10: "Queen",
-  11: "King",
-  12: "Ace",
+  9: "J",
+  10: "Q",
+  11: "K",
+  12: "A",
 };
 export default function Home() {
   const [bank, setBank] = React.useState(2000);
@@ -33,16 +34,18 @@ export default function Home() {
 
   React.useEffect(() => {
     const localDeck = JSON.parse(window.localStorage.getItem("deck"));
-    if (localDeck) {
+    console.log(localDeck);
+    if (localDeck && localDeck.length >= 52) {
       setDeck(localDeck);
     } else {
       shuffle();
     }
     const localBank = window.localStorage.getItem("bank");
     if (localBank) {
-      setBank(localBank);
+      setBank(Number(localBank));
     }
   }, []);
+
   React.useEffect(() => {
     const total = calculateHand(userHand);
     setUserTotal(total);
@@ -103,6 +106,7 @@ export default function Home() {
       case "blackjack":
         if (dealerTotal === 21) {
           console.log("push");
+          setBank(bank);
         } else {
           console.log("user wins");
           setBank(bank + Math.round(bet * 1.5));
@@ -121,7 +125,9 @@ export default function Home() {
     setBet(0);
     setTimeout(() => {
       setState("bet");
-      setBet(prevBet);
+      if (bank >= prevBet) {
+        setBet(prevBet);
+      }
     }, 2000);
   }, [dealerTotal]);
 
@@ -162,6 +168,8 @@ export default function Home() {
 
   React.useEffect(() => {
     window.localStorage.setItem("bank", bank);
+    const prevBet = bet;
+    setBet(0);
   }, [bank]);
 
   const shuffle = () => {
@@ -291,22 +299,82 @@ export default function Home() {
     //   )}
     // </div>
     <Main>
-      {bet > 0 && (
-        <Bet>
-          <div onClick={() => removeBet()}>
-            {betList.slice(-3).map((amount) => (
-              <img src={`./chip${amount}.png`} alt={`chip${amount}`} />
-            ))}
-          </div>
-          <p>${bet}</p>
-        </Bet>
-      )}
+      <div className="main">
+        <div className="playfield">
+          {dealerHand.length !== 0 && (
+            <div>
+              Dealer: {dealerTotal}
+              <div className="cards">
+                {dealerHand.map((card, i) =>
+                  i == 0 && ["deal", "user", "split"].includes(state) ? (
+                    "{x}"
+                  ) : (
+                    <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
+                  )
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
-      <Bank>
+        {bet > 0 && (
+          <Bet>
+            <div className="buttons">
+              {["deal", "user", "split"].includes(state) && (
+                <button onClick={hit}>Hit</button>
+              )}
+            </div>
+            <div id="bets">
+              <div onClick={() => removeBet()}>
+                {betList.slice(-3).map((amount) => (
+                  <img src={`./chip${amount}.png`} alt={`chip${amount}`} />
+                ))}
+              </div>
+              <p>${bet}</p>
+            </div>
+            <div className="buttons">
+              {state === "bet" && bet != 0 && (
+                <button onClick={deal}>Deal</button>
+              )}
+              {["deal", "user", "split"].includes(state) && (
+                <button onClick={stand}>Stand</button>
+              )}
+            </div>
+          </Bet>
+        )}
+
+        <div className="playfield">
+          {userHand.length !== 0 && (
+            <div>
+              Player: {userTotal}
+              <div className="cards">
+                {userHand.map((card) => (
+                  <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* 
+      <div>
+        {["deal", "user", "split"].includes(state) && (
+          <button onClick={hit}>Hit</button>
+        )}
+        {["deal", "user", "split"].includes(state) && (
+          <button onClick={stand}>Stand</button>
+        )}
+        {state === "deal" &&
+          dealerHand[1].face === "12" &&
+          userHand.length === 2 && (
+            <button onClick={insurance}>Insurance</button>
+          )}
+      </div> */}
+      </div>
+      <StyledBank>
         <div className="toggle" {...getToggleProps()} />
         <div className="wrapper">
           <div className="balance">
-            Balance:
+            Bank:
             <p> ${bank - bet}</p>
           </div>
           <div {...getCollapseProps()}>
@@ -352,7 +420,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </Bank>
+      </StyledBank>
     </Main>
   );
 }
