@@ -10,12 +10,17 @@ export const Main = styled.div`
   .main {
     height: calc(100% - 4rem);
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    justify-content: center;
+    justify-items: center;
+    grid-template-columns: 100%;
+    grid-template-rows: auto 15% auto;
 
     /* padding-bottom: 100px; */
     /* margin-bottom: 100px; */
+    .bets {
+      width: 100%;
+    }
   }
 
   .playfield {
@@ -64,6 +69,7 @@ export const StyledBank = styled.div`
     border-radius: 50%;
     box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
     cursor: pointer;
+    z-index: 1000;
   }
 
   .balance {
@@ -131,7 +137,6 @@ export const Bet = styled.div`
     width: 8rem;
     border-radius: 50%;
     box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.25);
-    cursor: pointer;
   }
 
   p {
@@ -158,6 +163,7 @@ export const Bet = styled.div`
     box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.25);
     border: none;
     border-radius: 0.5rem;
+    cursor: pointer;
   }
 
   @media screen and (max-width: 768px) {
@@ -197,7 +203,7 @@ export const StyledCard = styled.div`
   user-select: none;
   p {
     margin: 0;
-    font-size: small;
+    font-size: medium;
     text-align: center;
   }
   img {
@@ -217,6 +223,11 @@ export const StyledCard = styled.div`
     transform: scale(-1, -1);
   }
 
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+
   #center {
     grid-column-start: 4;
     grid-column-end: 8;
@@ -227,5 +238,8 @@ export const StyledCard = styled.div`
   @media screen and (max-width: 768px) {
     width: 14vw;
     height: 22vw;
+    p {
+      font-size: 0.75em;
+    }
   }
 `;

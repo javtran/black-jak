@@ -3,6 +3,7 @@ import "../styles/global.css";
 import { useCollapse } from "react-collapsed";
 import { Bet, Main, StyledBank } from "./styles";
 import Card from "../components/card";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SUITS = { 0: "diamond", 1: "clover", 2: "heart", 3: "spade" };
 const FACES = {
@@ -30,7 +31,7 @@ export default function Home() {
   const [dealerHand, setDealerHand] = React.useState([]);
   const [dealerTotal, setDealerTotal] = React.useState(0);
   const [deck, setDeck] = React.useState([]);
-  const { getCollapseProps, getToggleProps, isExpanded } = useCollapse();
+  const { getCollapseProps, setExpanded } = useCollapse();
 
   React.useEffect(() => {
     const localDeck = JSON.parse(window.localStorage.getItem("deck"));
@@ -57,7 +58,7 @@ export default function Home() {
     }
 
     if (userTotal === 21) {
-      if (userHand.length == 2) {
+      if (userHand.length === 2) {
         console.log("blackjack");
         setState("blackjack");
         return;
@@ -122,11 +123,14 @@ export default function Home() {
         return;
     }
     const prevBet = bet;
+    const prevBetList = betList;
     setBet(0);
+    setBetList([]);
     setTimeout(() => {
       setState("bet");
       if (bank >= prevBet) {
         setBet(prevBet);
+        setBetList(betList);
       }
     }, 2000);
   }, [dealerTotal]);
@@ -147,6 +151,7 @@ export default function Home() {
       case "bet":
         setDealerHand([]);
         setUserHand([]);
+        setExpanded(true);
         if (deck.length != 0 && deck.length < 52) {
           shuffle();
         }
@@ -154,6 +159,7 @@ export default function Home() {
       case "deal":
       case "user":
       case "insurance":
+        setExpanded(false);
         break;
       default:
         const total = calculateHand(dealerHand);
@@ -251,6 +257,7 @@ export default function Home() {
   };
 
   const removeBet = () => {
+    if (state !== "bet") return;
     setBet(bet - betList[betList.length - 1]);
     setBetList(betList.slice(0, -1));
   };
@@ -301,59 +308,142 @@ export default function Home() {
     <Main>
       <div className="main">
         <div className="playfield">
-          {dealerHand.length !== 0 && (
-            <div>
-              Dealer: {dealerTotal}
-              <div className="cards">
-                {dealerHand.map((card, i) =>
-                  i == 0 && ["deal", "user", "split"].includes(state) ? (
-                    "{x}"
-                  ) : (
-                    <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
-                  )
-                )}
-              </div>
-            </div>
-          )}
+          <div>
+            <AnimatePresence>
+              {dealerHand.length !== 0 && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  Dealer: {dealerTotal}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {dealerHand.length !== 0 && (
+                <motion.div
+                  className="cards"
+                  exit={{ x: "-90vw" }}
+                  transition={{ bounce: 0 }}
+                >
+                  {dealerHand.map((card, i) =>
+                    i == -1 && ["deal", "user", "split"].includes(state) ? (
+                      "{x}"
+                    ) : (
+                      <motion.div
+                        key={i}
+                        initial={{ x: "-100vw", y: "-30vh" }}
+                        animate={{ x: 0, y: 0 }}
+                        transition={{
+                          delay: i < 2 ? 0.8 * i + 0.4 : 0,
+                          bounce: 0,
+                        }}
+                      >
+                        <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
+                      </motion.div>
+                    )
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-
-        {bet > 0 && (
+        <div className="bets">
           <Bet>
             <div className="buttons">
               {["deal", "user", "split"].includes(state) && (
-                <button onClick={hit}>Hit</button>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={hit}
+                >
+                  Hit
+                </motion.button>
               )}
             </div>
+
             <div id="bets">
-              <div onClick={() => removeBet()}>
-                {betList.slice(-3).map((amount) => (
-                  <img src={`./chip${amount}.png`} alt={`chip${amount}`} />
-                ))}
+              <div style={{ cursor: state === "bet" ? "pointer" : "default" }}>
+                <AnimatePresence>
+                  {betList.map((amount, i) => (
+                    <motion.img
+                      key={i}
+                      src={`./chip${amount}.png`}
+                      alt={`chip${amount}`}
+                      initial={{ y: 500 }}
+                      animate={{ y: 0 }}
+                      exit={{ y: 500 }}
+                      transition={{ bounce: 0, duration: 0.2 }}
+                      onClick={() => removeBet()}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
-              <p>${bet}</p>
+              {bet > 0 && <p>${bet}</p>}
             </div>
             <div className="buttons">
               {state === "bet" && bet != 0 && (
-                <button onClick={deal}>Deal</button>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={deal}
+                >
+                  Deal
+                </motion.button>
               )}
-              {["deal", "user", "split"].includes(state) && (
-                <button onClick={stand}>Stand</button>
-              )}
+              <AnimatePresence>
+                {["deal", "user", "split"].includes(state) && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={stand}
+                  >
+                    Stand
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           </Bet>
-        )}
+        </div>
 
         <div className="playfield">
-          {userHand.length !== 0 && (
-            <div>
-              Player: {userTotal}
-              <div className="cards">
-                {userHand.map((card) => (
-                  <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
-                ))}
-              </div>
-            </div>
-          )}
+          <div>
+            <AnimatePresence>
+              {userHand.length !== 0 && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  Player: {userTotal}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {userHand.length !== 0 && (
+                <motion.div
+                  className="cards"
+                  exit={{ x: "-90vw" }}
+                  transition={{ bounce: 0 }}
+                >
+                  {userHand.map((card, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ x: "-100vw", y: "-30vh" }}
+                      animate={{ x: 0, y: 0 }}
+                      transition={{ delay: i < 2 ? 0.8 * i : 0, bounce: 0 }}
+                    >
+                      <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
         {/* 
       <div>
@@ -371,7 +461,7 @@ export default function Home() {
       </div> */}
       </div>
       <StyledBank>
-        <div className="toggle" {...getToggleProps()} />
+        {/* <div className="toggle" /> */}
         <div className="wrapper">
           <div className="balance">
             Bank:
