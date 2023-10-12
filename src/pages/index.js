@@ -1,7 +1,7 @@
 import * as React from "react";
 import "../styles/global.css";
 import { useCollapse } from "react-collapsed";
-import { Bet, Main, StyledBank } from "./styles";
+import { Bet, FlipCard, Main, Result, StyledBank } from "./styles";
 import Card from "../components/card";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,11 +31,16 @@ export default function Home() {
   const [dealerHand, setDealerHand] = React.useState([]);
   const [dealerTotal, setDealerTotal] = React.useState(0);
   const [deck, setDeck] = React.useState([]);
+  const [result, setResult] = React.useState(null);
+  const [win, setWin] = React.useState(0);
   const { getCollapseProps, setExpanded } = useCollapse();
+
+  const variants = {
+    exit: (result) => ({ y: result === "Dealer Wins!" ? "-50vh" : "50vh" }),
+  };
 
   React.useEffect(() => {
     const localDeck = JSON.parse(window.localStorage.getItem("deck"));
-    console.log(localDeck);
     if (localDeck && localDeck.length >= 52) {
       setDeck(localDeck);
     } else {
@@ -49,7 +54,9 @@ export default function Home() {
 
   React.useEffect(() => {
     const total = calculateHand(userHand);
-    setUserTotal(total);
+    setTimeout(() => {
+      setUserTotal(total);
+    }, 300);
   }, [userHand]);
 
   React.useEffect(() => {
@@ -73,7 +80,9 @@ export default function Home() {
         ? dealerHand
         : dealerHand.filter((card) => card != dealerHand[0]);
     const total = calculateHand(hand);
-    setDealerTotal(total);
+    setTimeout(() => {
+      setDealerTotal(total);
+    }, 300);
   }, [dealerHand]);
 
   React.useEffect(() => {
@@ -82,57 +91,45 @@ export default function Home() {
         if (dealerTotal < 17) {
           setTimeout(() => {
             hit();
-          }, 1000);
+          }, 400);
           return;
         } else {
           switch (true) {
             case dealerTotal > 21:
             case dealerTotal < userTotal:
-              console.log("user wins");
-              setBank(bank + bet);
+              setResult("You Wins!");
+              setWin(bet);
               break;
 
             case dealerTotal > userTotal:
             case dealerTotal === 21 && dealerHand.length === 2:
-              console.log("dealer wins");
-              setBank(bank - bet);
+              setResult("Dealer Wins!");
+              setWin(-1 * bet);
               break;
 
             default:
-              console.log("push");
+              setResult("Push");
               break;
           }
         }
         break;
       case "blackjack":
         if (dealerTotal === 21) {
-          console.log("push");
-          setBank(bank);
+          setResult("Push");
         } else {
-          console.log("user wins");
-          setBank(bank + Math.round(bet * 1.5));
+          setResult("You Wins!");
+          setWin(Math.round(bet * 1.5));
         }
         break;
       case "bust":
         if (state === "bust") {
-          console.log("dealer wins");
-          setBank(bank - bet);
+          setResult("Dealer Wins!");
+          setWin(-1 * bet);
         }
         break;
       default:
         return;
     }
-    const prevBet = bet;
-    const prevBetList = betList;
-    setBet(0);
-    setBetList([]);
-    setTimeout(() => {
-      setState("bet");
-      if (bank >= prevBet) {
-        setBet(prevBet);
-        setBetList(betList);
-      }
-    }, 2000);
   }, [dealerTotal]);
 
   /**
@@ -151,6 +148,7 @@ export default function Home() {
       case "bet":
         setDealerHand([]);
         setUserHand([]);
+        setWin(0);
         setExpanded(true);
         if (deck.length != 0 && deck.length < 52) {
           shuffle();
@@ -163,7 +161,12 @@ export default function Home() {
         break;
       default:
         const total = calculateHand(dealerHand);
-        setDealerTotal(total);
+        let card = document.querySelector(".flip");
+        card.classList.toggle("is-flipped");
+        setTimeout(() => {
+          setDealerTotal(total);
+        }, 200);
+
         break;
     }
   }, [state]);
@@ -174,8 +177,6 @@ export default function Home() {
 
   React.useEffect(() => {
     window.localStorage.setItem("bank", bank);
-    const prevBet = bet;
-    setBet(0);
   }, [bank]);
 
   const shuffle = () => {
@@ -217,8 +218,17 @@ export default function Home() {
   };
 
   const deal = () => {
-    setUserHand([deck[0], deck[2]]);
-    setDealerHand([deck[1], deck[3]]);
+    setUserHand([deck[0]]);
+    setTimeout(() => {
+      setDealerHand([deck[1]]);
+    }, 400);
+    setTimeout(() => {
+      setUserHand([deck[0], deck[2]]);
+    }, 800);
+    setTimeout(() => {
+      setDealerHand([deck[1], deck[3]]);
+    }, 1200);
+
     //change local storage
     setDeck((deck) => deck.filter((c, i) => i > 3));
     setState("deal");
@@ -260,6 +270,24 @@ export default function Home() {
     if (state !== "bet") return;
     setBet(bet - betList[betList.length - 1]);
     setBetList(betList.slice(0, -1));
+  };
+
+  const reset = () => {
+    setResult(null);
+    const prevBet = bet;
+    const prevBetList = betList;
+    setTimeout(() => {
+      setBet(0);
+      setBetList([]);
+      setBank(bank + win);
+    }, 800);
+    setTimeout(() => {
+      setState("bet");
+      if (bank >= prevBet) {
+        setBet(prevBet);
+        setBetList(betList);
+      }
+    }, 1600);
   };
 
   return (
@@ -307,6 +335,24 @@ export default function Home() {
     // </div>
     <Main>
       <div className="main">
+        <AnimatePresence>
+          {result && (
+            <Result
+              onClick={(e) => {
+                reset();
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <p>{result}</p>
+              </motion.div>
+            </Result>
+          )}
+        </AnimatePresence>
+
         <div className="playfield">
           <div>
             <AnimatePresence>
@@ -328,15 +374,40 @@ export default function Home() {
                   transition={{ bounce: 0 }}
                 >
                   {dealerHand.map((card, i) =>
-                    i == -1 && ["deal", "user", "split"].includes(state) ? (
-                      "{x}"
+                    i == 0 ? (
+                      <motion.div
+                        key={i}
+                        initial={{ x: "-100vw", y: "-30vh" }}
+                        animate={{ x: 0, y: 0 }}
+                        transition={{
+                          bounce: 0,
+                        }}
+                      >
+                        <FlipCard
+                          className="flip"
+                          onClick={(e) => {
+                            let card = document.querySelector(".flip");
+                            console.log(card);
+                            card.classList.toggle("is-flipped");
+                          }}
+                        >
+                          <div>
+                            <Card back={true} />
+                          </div>
+                          <div className="front">
+                            <Card
+                              face={FACES[card.face]}
+                              suit={SUITS[card.suit]}
+                            />
+                          </div>
+                        </FlipCard>
+                      </motion.div>
                     ) : (
                       <motion.div
                         key={i}
                         initial={{ x: "-100vw", y: "-30vh" }}
                         animate={{ x: 0, y: 0 }}
                         transition={{
-                          delay: i < 2 ? 0.8 * i + 0.4 : 0,
                           bounce: 0,
                         }}
                       >
@@ -366,22 +437,25 @@ export default function Home() {
 
             <div id="bets">
               <div style={{ cursor: state === "bet" ? "pointer" : "default" }}>
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {betList.map((amount, i) => (
                     <motion.img
                       key={i}
                       src={`./chip${amount}.png`}
                       alt={`chip${amount}`}
-                      initial={{ y: 500 }}
+                      initial={{ y: "50vh" }}
                       animate={{ y: 0 }}
-                      exit={{ y: 500 }}
+                      // exit={{ y: "50vh" }}
+                      exit={"exit"}
+                      custom={result}
+                      variants={variants}
                       transition={{ bounce: 0, duration: 0.2 }}
                       onClick={() => removeBet()}
                     />
                   ))}
                 </AnimatePresence>
               </div>
-              {bet > 0 && <p>${bet}</p>}
+              {bet > 0 && <p>${bet}</p>} {result}
             </div>
             <div className="buttons">
               {state === "bet" && bet != 0 && (
@@ -435,7 +509,7 @@ export default function Home() {
                       key={i}
                       initial={{ x: "-100vw", y: "-30vh" }}
                       animate={{ x: 0, y: 0 }}
-                      transition={{ delay: i < 2 ? 0.8 * i : 0, bounce: 0 }}
+                      transition={{ bounce: 0 }}
                     >
                       <Card face={FACES[card.face]} suit={SUITS[card.suit]} />
                     </motion.div>
@@ -445,23 +519,8 @@ export default function Home() {
             </AnimatePresence>
           </div>
         </div>
-        {/* 
-      <div>
-        {["deal", "user", "split"].includes(state) && (
-          <button onClick={hit}>Hit</button>
-        )}
-        {["deal", "user", "split"].includes(state) && (
-          <button onClick={stand}>Stand</button>
-        )}
-        {state === "deal" &&
-          dealerHand[1].face === "12" &&
-          userHand.length === 2 && (
-            <button onClick={insurance}>Insurance</button>
-          )}
-      </div> */}
       </div>
       <StyledBank>
-        {/* <div className="toggle" /> */}
         <div className="wrapper">
           <div className="balance">
             Bank:

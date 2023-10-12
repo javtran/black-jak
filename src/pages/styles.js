@@ -7,6 +7,7 @@ export const Main = styled.div`
   display: flex;
   justify-content: center;
   color: white;
+  overflow: hidden;
   .main {
     height: calc(100% - 4rem);
     width: 100%;
@@ -14,8 +15,8 @@ export const Main = styled.div`
     justify-content: center;
     justify-items: center;
     grid-template-columns: 100%;
-    grid-template-rows: auto 15% auto;
-
+    grid-template-rows: 1fr 15% 1fr;
+    position: relative;
     /* padding-bottom: 100px; */
     /* margin-bottom: 100px; */
     .bets {
@@ -148,7 +149,6 @@ export const Bet = styled.div`
 
   .buttons {
     flex: 1;
-    /* border: 1px solid black; */
     display: flex;
     justify-content: center;
   }
@@ -201,6 +201,7 @@ export const StyledCard = styled.div`
   align-items: center;
   justify-items: center;
   user-select: none;
+
   p {
     margin: 0;
     font-size: medium;
@@ -235,6 +236,12 @@ export const StyledCard = styled.div`
     grid-row-end: 8;
     border: 1px;
   }
+
+  #back {
+    grid-row: span 10;
+    grid-column: span 10;
+    height: 100%;
+  }
   @media screen and (max-width: 768px) {
     width: 14vw;
     height: 22vw;
@@ -242,4 +249,49 @@ export const StyledCard = styled.div`
       font-size: 0.75em;
     }
   }
+`;
+
+export const FlipCard = styled.div`
+  position: relative;
+  width: 7.8rem;
+  height: 10.8rem;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+
+  &.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  & > div {
+    position: absolute;
+    width: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  .front {
+    transform: rotateY(180deg);
+  }
+
+  @media screen and (max-width: 768px) {
+    width: calc(14vw + 0.8rem);
+    height: calc(22vw + 0.8rem);
+  }
+`;
+
+export const Result = styled.div`
+  div {
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: xx-large;
+    font-weight: bold;
+    width: 100%;
+    height: 100%;
+  }
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  user-select: none;
 `;
