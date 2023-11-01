@@ -206,6 +206,7 @@ export const StyledCard = styled.div`
     margin: 0;
     font-size: medium;
     text-align: center;
+    width: 1rem;
   }
   img {
     width: 100%;

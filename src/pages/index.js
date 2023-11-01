@@ -1,7 +1,7 @@
 import * as React from "react";
 import "../styles/global.css";
 import { useCollapse } from "react-collapsed";
-import { Bet, FlipCard, Main, Result, StyledBank } from "./styles";
+import { Bet, FlipCard, Main, Result, StyledBank } from "../styles/styles";
 import Card from "../components/card";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,7 +36,10 @@ export default function Home() {
   const { getCollapseProps, setExpanded } = useCollapse();
 
   const variants = {
-    exit: (result) => ({ y: result === "Dealer Wins!" ? "-50vh" : "50vh" }),
+    exit: (result) => {
+      console.log(result);
+      return { y: result === "Dealer Wins!" ? "-50vh" : "50vh" };
+    },
   };
 
   React.useEffect(() => {
@@ -97,7 +100,7 @@ export default function Home() {
           switch (true) {
             case dealerTotal > 21:
             case dealerTotal < userTotal:
-              setResult("You Wins!");
+              setResult("You Win!");
               setWin(bet);
               break;
 
@@ -117,13 +120,13 @@ export default function Home() {
         if (dealerTotal === 21) {
           setResult("Push");
         } else {
-          setResult("You Wins!");
+          setResult("You Win!");
           setWin(Math.round(bet * 1.5));
         }
         break;
       case "bust":
         if (state === "bust") {
-          setResult("Dealer Wins!");
+          setResult("Dealer Win!");
           setWin(-1 * bet);
         }
         break;
@@ -273,21 +276,19 @@ export default function Home() {
   };
 
   const reset = () => {
+    setBet(0);
+    setBetList([]);
+    setBank(bank + win);
     setResult(null);
     const prevBet = bet;
     const prevBetList = betList;
-    setTimeout(() => {
-      setBet(0);
-      setBetList([]);
-      setBank(bank + win);
-    }, 800);
     setTimeout(() => {
       setState("bet");
       if (bank >= prevBet) {
         setBet(prevBet);
         setBetList(betList);
       }
-    }, 1600);
+    }, 800);
   };
 
   return (
@@ -445,7 +446,6 @@ export default function Home() {
                       alt={`chip${amount}`}
                       initial={{ y: "50vh" }}
                       animate={{ y: 0 }}
-                      // exit={{ y: "50vh" }}
                       exit={"exit"}
                       custom={result}
                       variants={variants}
@@ -455,7 +455,7 @@ export default function Home() {
                   ))}
                 </AnimatePresence>
               </div>
-              {bet > 0 && <p>${bet}</p>} {result}
+              {bet > 0 && <p>${bet}</p>}
             </div>
             <div className="buttons">
               {state === "bet" && bet != 0 && (

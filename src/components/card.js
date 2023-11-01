@@ -1,5 +1,5 @@
 import React from "react";
-import { StyledCard } from "../pages/styles";
+import { StyledCard } from "../styles/styles";
 
 export default function Card({ face, suit, back }) {
   return !back ? (
