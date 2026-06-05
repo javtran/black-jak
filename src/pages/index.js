@@ -1,9 +1,9 @@
 import * as React from "react";
 import "../styles/global.css";
 import { useCollapse } from "react-collapsed";
-import { Bet, FlipCard, Main, Result, StyledBank } from "../styles/styles";
+import { Bet, FlipCard, GameButton, Main, ResultOverlay, ResultCard, ScoreBadge, StyledBank } from "../styles/styles";
 import Card from "../components/card";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate, useMotionValue, useTransform } from "framer-motion";
 
 const SUITS = { 0: "diamond", 1: "clover", 2: "heart", 3: "spade" };
 const FACES = {
@@ -33,6 +33,10 @@ export default function Home() {
   const [deck, setDeck] = React.useState([]);
   const [result, setResult] = React.useState(null);
   const [win, setWin] = React.useState(0);
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const [isFlipped, setIsFlipped] = React.useState(false);
+  const betMotionValue = useMotionValue(0);
+  const displayBet = useTransform(betMotionValue, (v) => `$${Math.round(v)}`);
   const { getCollapseProps, setExpanded } = useCollapse();
 
   const variants = {
@@ -86,17 +90,21 @@ export default function Home() {
     setTimeout(() => {
       setDealerTotal(total);
     }, 300);
+
+    // Subsequent dealer hits: fires on every card addition (even same-total cases
+    // like A+A=12 then A+A+Q=12 where dealerTotal effect won't re-fire).
+    if (state === "dealer" && total < 17) {
+      setTimeout(() => {
+        hit();
+      }, 700);
+    }
   }, [dealerHand]);
 
   React.useEffect(() => {
+    // Result determination only — no hit triggers here.
     switch (state) {
       case "dealer":
-        if (dealerTotal < 17) {
-          setTimeout(() => {
-            hit();
-          }, 400);
-          return;
-        } else {
+        if (dealerTotal >= 17) {
           switch (true) {
             case dealerTotal > 21:
             case dealerTotal < userTotal:
@@ -125,10 +133,8 @@ export default function Home() {
         }
         break;
       case "bust":
-        if (state === "bust") {
-          setResult("Dealer Win!");
-          setWin(-1 * bet);
-        }
+        setResult("Dealer Wins!");
+        setWin(-1 * bet);
         break;
       default:
         return;
@@ -151,7 +157,10 @@ export default function Home() {
       case "bet":
         setDealerHand([]);
         setUserHand([]);
+        setDealerTotal(0);
+        setUserTotal(0);
         setWin(0);
+        setIsFlipped(false);
         setExpanded(true);
         if (deck.length != 0 && deck.length < 52) {
           shuffle();
@@ -164,15 +173,23 @@ export default function Home() {
         break;
       default:
         const total = calculateHand(dealerHand);
-        let card = document.querySelector(".flip");
-        card.classList.toggle("is-flipped");
+        setIsFlipped(true);
         setTimeout(() => {
           setDealerTotal(total);
+          // First hit: fires when state just became "dealer" (dealerHand unchanged,
+          // so the dealerHand effect won't fire for this card reveal).
+          if (state === "dealer" && total < 17) {
+            setTimeout(() => hit(), 400);
+          }
         }, 200);
-
         break;
     }
   }, [state]);
+
+  React.useEffect(() => {
+    const controls = animate(betMotionValue, bet, { duration: 0.3, ease: "easeOut" });
+    return controls.stop;
+  }, [bet]);
 
   React.useEffect(() => {
     window.localStorage.setItem("deck", JSON.stringify(deck));
@@ -221,6 +238,9 @@ export default function Home() {
   };
 
   const deal = () => {
+    setIsAnimating(true);
+    setExpanded(false);
+    setDeck((deck) => deck.filter((c, i) => i > 3));
     setUserHand([deck[0]]);
     setTimeout(() => {
       setDealerHand([deck[1]]);
@@ -230,11 +250,11 @@ export default function Home() {
     }, 800);
     setTimeout(() => {
       setDealerHand([deck[1], deck[3]]);
+      setState((current) => current === "bet" ? "deal" : current);
     }, 1200);
-
-    //change local storage
-    setDeck((deck) => deck.filter((c, i) => i > 3));
-    setState("deal");
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 1800);
   };
 
   const stand = () => {
@@ -247,8 +267,9 @@ export default function Home() {
 
   const hit = () => {
     const card = deck[0];
-    // change local storage
     setDeck((deck) => deck.filter((c, i) => i !== 0));
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 700);
 
     switch (state) {
       case "user":
@@ -276,17 +297,18 @@ export default function Home() {
   };
 
   const reset = () => {
-    setBet(0);
-    setBetList([]);
-    setBank(bank + win);
-    setResult(null);
     const prevBet = bet;
     const prevBetList = betList;
+    const newBank = bank + win;
+    setBet(0);
+    setBetList([]);
+    setBank(newBank);
     setTimeout(() => {
+      setResult(null);
       setState("bet");
-      if (bank >= prevBet) {
+      if (newBank >= prevBet) {
         setBet(prevBet);
-        setBetList(betList);
+        setBetList(prevBetList);
       }
     }, 800);
   };
@@ -338,41 +360,68 @@ export default function Home() {
       <div className="main">
         <AnimatePresence>
           {result && (
-            <Result
-              onClick={(e) => {
-                reset();
-              }}
+            <ResultOverlay
+              as={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.85, opacity: 0 }}
+                transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
               >
-                <p>{result}</p>
+                <ResultCard $win={win}>
+                  <span className="result-label">{result}</span>
+                  <span className="result-delta">
+                    {win > 0 ? `+$${win}` : win < 0 ? `-$${Math.abs(win)}` : "Push"}
+                  </span>
+                  <button onClick={reset}>Play Again</button>
+                </ResultCard>
               </motion.div>
-            </Result>
+            </ResultOverlay>
           )}
         </AnimatePresence>
 
-        <div className="playfield">
-          <div>
+        <div className="playfield dealer-field">
+          <div className="hand-group">
             <AnimatePresence>
               {dealerHand.length !== 0 && (
-                <motion.span
+                <ScoreBadge
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  Dealer: {dealerTotal}
-                </motion.span>
+                  <span className="label">Dealer</span>
+                  <span className="value">
+                    {["deal", "user"].includes(state) ? `${dealerTotal} + ?` : dealerTotal}
+                  </span>
+                  <AnimatePresence>
+                    {state === "dealer" && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                        exit={{ opacity: 0 }}
+                        style={{ letterSpacing: "0.1em" }}
+                      >
+                        ...
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </ScoreBadge>
               )}
             </AnimatePresence>
             <AnimatePresence>
               {dealerHand.length !== 0 && (
                 <motion.div
                   className="cards"
+                  animate={state === "dealer" ? {
+                    filter: ["drop-shadow(0 0 0px rgba(255,255,255,0))", "drop-shadow(0 0 8px rgba(255,255,255,0.6))", "drop-shadow(0 0 0px rgba(255,255,255,0))"],
+                  } : { filter: "drop-shadow(0 0 0px rgba(255,255,255,0))" }}
+                  transition={{ filter: { duration: 1.2, repeat: state === "dealer" ? Infinity : 0, ease: "easeInOut" }, x: { duration: 0.4, ease: "easeIn", bounce: 0 } }}
                   exit={{ x: "-90vw" }}
-                  transition={{ bounce: 0 }}
                 >
                   {dealerHand.map((card, i) =>
                     i == 0 ? (
@@ -385,12 +434,7 @@ export default function Home() {
                         }}
                       >
                         <FlipCard
-                          className="flip"
-                          onClick={(e) => {
-                            let card = document.querySelector(".flip");
-                            console.log(card);
-                            card.classList.toggle("is-flipped");
-                          }}
+                          className={isFlipped ? "flip is-flipped" : "flip"}
                         >
                           <div>
                             <Card back={true} />
@@ -425,14 +469,18 @@ export default function Home() {
           <Bet>
             <div className="buttons">
               {["deal", "user", "split"].includes(state) && (
-                <motion.button
+                <GameButton
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  whileHover={{ scale: isAnimating ? 1 : 1.08 }}
+                  whileTap={{ scale: isAnimating ? 1 : 0.95 }}
                   onClick={hit}
+                  disabled={isAnimating}
+                  $variant="hit"
                 >
                   Hit
-                </motion.button>
+                </GameButton>
               )}
             </div>
 
@@ -455,46 +503,55 @@ export default function Home() {
                   ))}
                 </AnimatePresence>
               </div>
-              {bet > 0 && <p>${bet}</p>}
+              {bet > 0 && <motion.p>{displayBet}</motion.p>}
             </div>
             <div className="buttons">
               {state === "bet" && bet != 0 && (
-                <motion.button
+                <GameButton
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  whileHover={{ scale: isAnimating ? 1 : 1.08 }}
+                  whileTap={{ scale: isAnimating ? 1 : 0.95 }}
                   onClick={deal}
+                  disabled={isAnimating}
+                  $variant="deal"
                 >
                   Deal
-                </motion.button>
+                </GameButton>
               )}
               <AnimatePresence>
                 {["deal", "user", "split"].includes(state) && (
-                  <motion.button
+                  <GameButton
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
+                    whileHover={{ scale: isAnimating ? 1 : 1.08 }}
+                    whileTap={{ scale: isAnimating ? 1 : 0.95 }}
                     onClick={stand}
+                    disabled={isAnimating}
+                    $variant="stand"
                   >
                     Stand
-                  </motion.button>
+                  </GameButton>
                 )}
               </AnimatePresence>
             </div>
           </Bet>
         </div>
 
-        <div className="playfield">
-          <div>
+        <div className="playfield player-field">
+          <div className="hand-group">
             <AnimatePresence>
               {userHand.length !== 0 && (
-                <motion.span
+                <ScoreBadge
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  Player: {userTotal}
-                </motion.span>
+                  <span className="label">Player</span>
+                  <span className="value">{userTotal}</span>
+                </ScoreBadge>
               )}
             </AnimatePresence>
             <AnimatePresence>
@@ -502,7 +559,7 @@ export default function Home() {
                 <motion.div
                   className="cards"
                   exit={{ x: "-90vw" }}
-                  transition={{ bounce: 0 }}
+                  transition={{ x: { duration: 0.4, ease: "easeIn", bounce: 0, delay: 0.15 } }}
                 >
                   {userHand.map((card, i) => (
                     <motion.div
@@ -520,7 +577,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <StyledBank>
+      <StyledBank $disabled={isAnimating}>
         <div className="wrapper">
           <div className="balance">
             Bank:
